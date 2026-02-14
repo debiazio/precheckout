@@ -1,5 +1,5 @@
 import { Service, method } from '@vtex/api'
-import type { ClientsConfig, ServiceContext } from '@vtex/api'
+import type { ClientsConfig } from '@vtex/api'
 import { Clients } from './clients'
 import { saveClient } from './middlewares/saveClient'
 
