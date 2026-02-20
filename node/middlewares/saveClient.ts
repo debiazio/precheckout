@@ -27,33 +27,9 @@ export async function saveClient(ctx: ServiceContext, next: () => Promise<void>)
 
     const dataEntity = 'CL'
 
-    const found = await ctx.clients.masterdata.searchDocuments<{
-      id: string
-      email: string
-    }>({
-      dataEntity,
-      fields: ['id', 'email'],
-      where: `email=${email}`,
-      pagination: { page: 1, pageSize: 1 },
-    })
-
-    if (found?.length) {
-      await ctx.clients.masterdata.updatePartialDocument({
-        dataEntity,
-        id: found[0].id,
-        fields: {
-          homePhone,
-          orderFormId,
-        },
-      })
-
-      ctx.status = 200
-      ctx.body = { ok: true, action: 'updated', id: found[0].id }
-      await next()
-      return
-    }
-
-    const res = await ctx.clients.masterdata.createDocument({
+    // Não filtra por email (nesse ambiente dá "Cannot filter by private fields")
+    // Estratégia: tenta criar. Se já existir, não falha (duplicated entry).
+    await ctx.clients.masterdata.createDocument({
       dataEntity,
       fields: {
         email,
@@ -64,30 +40,27 @@ export async function saveClient(ctx: ServiceContext, next: () => Promise<void>)
     })
 
     ctx.status = 200
-    ctx.body = {
-      ok: true,
-      action: 'created',
-      id: (res as any)?.DocumentId ?? (res as any)?.Id ?? (res as any)?.id,
-    }
-
+    ctx.body = { ok: true, action: 'created' }
     await next()
   } catch (err) {
-    // LOG no node (aparece no vtex link)
     const e: any = err
-    console.error('saveClient error:', e?.response?.data ?? e)
-
-    const status = e?.response?.status ?? 500
     const mdMessage =
       e?.response?.data?.Message ??
       e?.response?.data?.message ??
       e?.message ??
       'Erro interno'
 
-    ctx.status = status
-    ctx.body = {
-      ok: false,
-      error: mdMessage,
-      details: e?.response?.data ?? null,
+    // Se já existir, Master Data costuma responder "duplicated entry" (400).
+    // Nesse caso, retornamos OK porque o contato já está capturado.
+    if (String(mdMessage).toLowerCase().includes('duplicated entry')) {
+      ctx.status = 200
+      ctx.body = { ok: true, action: 'already-exists' }
+      return
     }
+
+    console.error('saveClient error:', e?.response?.data ?? e)
+
+    ctx.status = e?.response?.status ?? 500
+    ctx.body = { ok: false, error: mdMessage, details: e?.response?.data ?? null }
   }
 }
