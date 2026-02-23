@@ -1,5 +1,6 @@
 // react/precheckout.tsx
-import React, { useMemo, useState } from 'react'
+/* eslint-disable react/jsx-no-bind */
+import React, { useEffect, useMemo, useState } from 'react'
 
 const CHECKOUT_URL = '/checkout/#/cart'
 
@@ -32,178 +33,6 @@ function isValidBRPhone(value: string) {
 function isValidEmail(value: string) {
   const e = (value || '').trim()
   return e.length >= 5 && e.includes('@') && e.includes('.') && !e.includes(' ')
-}
-
-export default function PreCheckout() {
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('') // mascarado
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // controla quando mostrar as mensagens (apenas após blur)
-  const [emailTouched, setEmailTouched] = useState(false)
-  const [phoneTouched, setPhoneTouched] = useState(false)
-
-  const phoneDigits = useMemo(() => onlyDigits(phone), [phone])
-
-  const emailOk = useMemo(() => isValidEmail(email), [email])
-  const phoneOk = useMemo(() => isValidBRPhone(phoneDigits), [phoneDigits])
-
-  const isValid = useMemo(() => emailOk && phoneOk, [emailOk, phoneOk])
-
-  function handlePhoneChange(value: string) {
-    setPhone(formatBRPhone(value))
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    // se tentar enviar, marca como "touched" pra aparecer mensagem
-    if (!emailTouched) setEmailTouched(true)
-    if (!phoneTouched) setPhoneTouched(true)
-
-    if (!isValid || loading) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // 1) pega orderForm
-      const ofResp = await fetch('/api/checkout/pub/orderForm', { method: 'GET' })
-      const orderForm = await ofResp.json()
-      const orderFormId = orderForm?.orderFormId
-
-      // 2) salva no MD via endpoint Node (telefone normalizado)
-      const saveResp = await fetch('/_v/precheckout/client', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim(),
-          homePhone: phoneDigits,
-          orderFormId,
-        }),
-      })
-
-      if (!saveResp.ok) {
-        const body = await saveResp.json().catch(() => ({}))
-        throw new Error(body?.error || 'Falha ao salvar seus dados')
-      }
-
-      // 3) seta no checkout (clientProfileData)
-      if (orderFormId) {
-        const attachResp = await fetch(
-          `/api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: email.trim(),
-              phone: phoneDigits,
-            }),
-          }
-        )
-
-        if (!attachResp.ok) {
-          const attachBody = await attachResp.json().catch(() => ({}))
-          throw new Error(
-            attachBody?.message ||
-              attachBody?.error ||
-              'Falha ao preparar o checkout'
-          )
-        }
-      }
-
-      window.location.href = CHECKOUT_URL
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro inesperado'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.headerRow}>
-          <div style={styles.step}>1</div>
-          <h1 style={styles.title}>Email</h1>
-        </div>
-
-        <p style={styles.subtitle}>Rápido. Fácil. Seguro.</p>
-
-        <form onSubmit={handleSubmit}>
-          <input
-            style={styles.input}
-            type="email"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => setEmailTouched(true)}
-            autoComplete="email"
-            required
-          />
-
-          {emailTouched && !emailOk && (
-            <div style={styles.hint}>
-              Informe um e-mail válido. Ex.: <strong>nome@dominio.com</strong>
-            </div>
-          )}
-
-          <input
-            style={{ ...styles.input, marginTop: 12 }}
-            type="tel"
-            placeholder="(DD) 9xxxx-xxxx"
-            value={phone}
-            onChange={(e) => handlePhoneChange(e.target.value)}
-            onBlur={() => setPhoneTouched(true)}
-            autoComplete="tel"
-            required
-          />
-
-          {phoneTouched && !phoneOk && (
-            <div style={styles.hint}>
-              Informe um celular válido: <strong>(DD) 9xxxx-xxxx</strong>
-            </div>
-          )}
-
-          <div style={styles.infoBox}>
-            <div style={styles.infoTitle}>
-              Usamos seus dados de forma 100% segura para:
-            </div>
-            <ul style={styles.list}>
-              <li style={styles.li}>
-                <span style={styles.check}>✓</span> Identificar seu perfil
-              </li>
-              <li style={styles.li}>
-                <span style={styles.check}>✓</span> Notificar sobre o andamento do seu pedido
-              </li>
-              <li style={styles.li}>
-                <span style={styles.check}>✓</span> Gerenciar seu histórico de compras
-              </li>
-              <li style={styles.li}>
-                <span style={styles.check}>✓</span> Acelerar o preenchimento de suas informações
-              </li>
-            </ul>
-          </div>
-
-          {error && <div style={styles.error}>{error}</div>}
-
-          <button
-            type="submit"
-            disabled={!isValid || loading}
-            style={{
-              ...styles.button,
-              opacity: !isValid || loading ? 0.6 : 1,
-              cursor: !isValid || loading ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? 'CONTINUANDO...' : 'CONTINUAR'}
-          </button>
-        </form>
-      </div>
-    </div>
-  )
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -321,4 +150,219 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: 0.6,
     fontSize: 16,
   },
+  loading: {
+    marginTop: 18,
+    color: '#6B7280',
+    fontSize: 14,
+    marginLeft: 6,
+  },
+}
+
+export default function PreCheckout() {
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('') // mascarado
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // mostra mensagens só após blur
+  const [emailTouched, setEmailTouched] = useState(false)
+  const [phoneTouched, setPhoneTouched] = useState(false)
+
+  // checagem inicial pra pular precheckout se já tiver email no orderForm
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  const phoneDigits = useMemo(() => onlyDigits(phone), [phone])
+
+  const emailOk = useMemo(() => isValidEmail(email), [email])
+  const phoneOk = useMemo(() => isValidBRPhone(phoneDigits), [phoneDigits])
+
+  const isValid = useMemo(() => emailOk && phoneOk, [emailOk, phoneOk])
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const ofResp = await fetch('/api/checkout/pub/orderForm', { method: 'GET' })
+        const orderForm = await ofResp.json()
+        const existingEmail = orderForm?.clientProfileData?.email
+
+        if (existingEmail) {
+          window.location.href = CHECKOUT_URL
+          return
+        }
+      } catch {
+        // se falhar, não bloqueia
+      } finally {
+        setCheckingSession(false)
+      }
+    })()
+  }, [])
+
+  function handlePhoneChange(value: string) {
+    setPhone(formatBRPhone(value))
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (!emailTouched) setEmailTouched(true)
+    if (!phoneTouched) setPhoneTouched(true)
+
+    if (!isValid || loading) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // 1) pega orderForm
+      const ofResp = await fetch('/api/checkout/pub/orderForm', { method: 'GET' })
+      const orderForm = await ofResp.json()
+      const orderFormId = orderForm?.orderFormId
+
+      // 2) salva no MD via endpoint Node (telefone normalizado)
+      const saveResp = await fetch('/_v/precheckout/client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          homePhone: phoneDigits,
+          orderFormId,
+        }),
+      })
+
+      const saveBody = await saveResp.json().catch(() => ({}))
+
+      if (!saveResp.ok || saveBody?.ok === false) {
+        throw new Error(saveBody?.error || saveBody?.message || 'Falha ao salvar seus dados')
+      }
+
+      // 3) seta no checkout (clientProfileData)
+      if (orderFormId) {
+        const attachResp = await fetch(
+          `/api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email.trim(),
+              phone: phoneDigits,
+            }),
+          }
+        )
+
+        if (!attachResp.ok) {
+          const attachBody = await attachResp.json().catch(() => ({}))
+          throw new Error(
+            attachBody?.message ||
+              attachBody?.error ||
+              'Falha ao preparar o checkout'
+          )
+        }
+      }
+
+      window.location.href = CHECKOUT_URL
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro inesperado'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (checkingSession) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <div style={styles.headerRow}>
+            <div style={styles.step}>1</div>
+            <h1 style={styles.title}>Email</h1>
+          </div>
+          <p style={styles.subtitle}>Rápido. Fácil. Seguro.</p>
+          <div style={styles.loading}>Verificando seu carrinho…</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <div style={styles.headerRow}>
+          <div style={styles.step}>1</div>
+          <h1 style={styles.title}>Email</h1>
+        </div>
+
+        <p style={styles.subtitle}>Rápido. Fácil. Seguro.</p>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            style={styles.input}
+            type="email"
+            placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            autoComplete="email"
+            required
+          />
+
+          {emailTouched && !emailOk && (
+            <div style={styles.hint}>
+              Informe um e-mail válido. Ex.: <strong>nome@dominio.com</strong>
+            </div>
+          )}
+
+          <input
+            style={{ ...styles.input, marginTop: 12 }}
+            type="tel"
+            placeholder="(DD) 9xxxx-xxxx"
+            value={phone}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            onBlur={() => setPhoneTouched(true)}
+            autoComplete="tel"
+            required
+          />
+
+          {phoneTouched && !phoneOk && (
+            <div style={styles.hint}>
+              Informe um celular válido: <strong>(DD) 9xxxx-xxxx</strong>
+            </div>
+          )}
+
+          <div style={styles.infoBox}>
+            <div style={styles.infoTitle}>
+              Usamos seu e-mail de forma 100% segura para:
+            </div>
+            <ul style={styles.list}>
+              <li style={styles.li}>
+                <span style={styles.check}>✓</span> Identificar seu perfil
+              </li>
+              <li style={styles.li}>
+                <span style={styles.check}>✓</span> Notificar sobre o andamento do seu pedido
+              </li>
+              <li style={styles.li}>
+                <span style={styles.check}>✓</span> Gerenciar seu histórico de compras
+              </li>
+              <li style={styles.li}>
+                <span style={styles.check}>✓</span> Acelerar o preenchimento de suas informações
+              </li>
+            </ul>
+          </div>
+
+          {error && <div style={styles.error}>{error}</div>}
+
+          <button
+            type="submit"
+            disabled={!isValid || loading}
+            style={{
+              ...styles.button,
+              opacity: !isValid || loading ? 0.6 : 1,
+              cursor: !isValid || loading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {loading ? 'CONTINUANDO...' : 'CONTINUAR'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
 }
