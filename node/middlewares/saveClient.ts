@@ -11,6 +11,62 @@ type Payload = {
 
 const DEFAULT_BIRTHDATE = '1900-01-01'
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function getErrorMessage(err: any) {
+  return (
+    err?.response?.data?.Message ??
+    err?.response?.data?.message ??
+    err?.message ??
+    'Erro interno'
+  )
+}
+
+async function createClientWithRetry(
+  ctx: ServiceContext,
+  payload: {
+    email: string
+    homePhone: string
+    orderFormId?: string
+  },
+  retries = 2,
+  delayMs = 400
+) {
+  let lastError: any = null
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      await ctx.clients.masterdata.createDocument({
+        dataEntity: 'CL',
+        fields: {
+          email: payload.email,
+          homePhone: payload.homePhone,
+          orderFormId: payload.orderFormId,
+          dataNascimento: DEFAULT_BIRTHDATE,
+        },
+      })
+
+      return { ok: true, action: 'created' as const }
+    } catch (err) {
+      lastError = err
+      const message = String(getErrorMessage(err)).toLowerCase()
+
+      if (message.includes('duplicated entry')) {
+        return { ok: true, action: 'already-exists' as const }
+      }
+
+      if (attempt < retries) {
+        await sleep(delayMs * (attempt + 1))
+        continue
+      }
+    }
+  }
+
+  throw lastError
+}
+
 export async function saveClient(ctx: ServiceContext, next: () => Promise<void>) {
   try {
     const body = (await coBody.json(ctx.req)) as Payload
@@ -25,42 +81,27 @@ export async function saveClient(ctx: ServiceContext, next: () => Promise<void>)
       return
     }
 
-    const dataEntity = 'CL'
-
-    // Não filtra por email (nesse ambiente dá "Cannot filter by private fields")
-    // Estratégia: tenta criar. Se já existir, não falha (duplicated entry).
-    await ctx.clients.masterdata.createDocument({
-      dataEntity,
-      fields: {
-        email,
-        homePhone,
-        orderFormId,
-        dataNascimento: DEFAULT_BIRTHDATE,
-      },
+    const result = await createClientWithRetry(ctx, {
+      email,
+      homePhone,
+      orderFormId,
     })
 
     ctx.status = 200
-    ctx.body = { ok: true, action: 'created' }
+    ctx.body = result
+
     await next()
   } catch (err) {
     const e: any = err
-    const mdMessage =
-      e?.response?.data?.Message ??
-      e?.response?.data?.message ??
-      e?.message ??
-      'Erro interno'
-
-    // Se já existir, Master Data costuma responder "duplicated entry" (400).
-    // Nesse caso, retornamos OK porque o contato já está capturado.
-    if (String(mdMessage).toLowerCase().includes('duplicated entry')) {
-      ctx.status = 200
-      ctx.body = { ok: true, action: 'already-exists' }
-      return
-    }
+    const mdMessage = getErrorMessage(e)
 
     console.error('saveClient error:', e?.response?.data ?? e)
 
     ctx.status = e?.response?.status ?? 500
-    ctx.body = { ok: false, error: mdMessage, details: e?.response?.data ?? null }
+    ctx.body = {
+      ok: false,
+      error: mdMessage,
+      details: e?.response?.data ?? null,
+    }
   }
 }
