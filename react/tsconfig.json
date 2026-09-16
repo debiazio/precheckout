@@ -2,11 +2,9 @@
   "extends": "@vtex/tsconfig",
   "compilerOptions": {
     "noEmitOnError": false,
-    "lib": [
-      "dom"
-    ],
+    "lib": ["dom"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "target": "es2017"
   },
   "include": [

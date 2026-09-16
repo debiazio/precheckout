@@ -218,6 +218,7 @@ export default function PreCheckout() {
   const [emailTouched, setEmailTouched] = useState(false)
   const [phoneTouched, setPhoneTouched] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
+  const [orderFormId, setOrderFormId] = useState<string | null>(null)
 
   const phoneDigits = useMemo(() => onlyDigits(phone), [phone])
 
@@ -225,6 +226,7 @@ export default function PreCheckout() {
   const phoneOk = useMemo(() => isValidBRPhone(phoneDigits), [phoneDigits])
 
   const isValid = useMemo(() => emailOk && phoneOk, [emailOk, phoneOk])
+
 
   useEffect(() => {
     let active = true
@@ -243,6 +245,10 @@ export default function PreCheckout() {
         if (existingEmail) {
           window.location.assign(CHECKOUT_URL)
           return
+        }
+
+        if (active && orderForm?.orderFormId) {
+          setOrderFormId(orderForm.orderFormId)
         }
       } catch {
         // se falhar, não bloqueia a página
@@ -272,56 +278,60 @@ export default function PreCheckout() {
     setError(null)
 
     try {
-      // 1) pega orderForm
-      const orderForm = await fetchJsonWithRetry(
-        '/api/checkout/pub/orderForm',
-        { method: 'GET' },
-        2,
-        400
-      )
+      // 1) reaproveita o orderFormId já buscado no useEffect; só busca de novo se necessário
+      let currentOrderFormId = orderFormId
 
-      const orderFormId = orderForm?.orderFormId
+      if (!currentOrderFormId) {
+        const orderForm = await fetchJsonWithRetry(
+          '/api/checkout/pub/orderForm',
+          { method: 'GET' },
+          2,
+          400
+        )
 
-      if (!orderFormId) {
-        throw new Error('Não foi possível identificar o carrinho')
+        currentOrderFormId = orderForm?.orderFormId
+
+        if (!currentOrderFormId) {
+          throw new Error('Não foi possível identificar o carrinho')
+        }
       }
 
-      // 2) salva no seu serviço customizado
-      const saveBody = await fetchJsonWithRetry(
-        '/_v/precheckout/client',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email.trim(),
-            homePhone: phoneDigits,
-            orderFormId,
-          }),
-        },
-        2,
-        700
-      )
+      // 2) salva no Master Data e no checkout em paralelo
+      const [saveBody] = await Promise.all([
+        fetchJsonWithRetry(
+          '/_v/precheckout/client',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email.trim(),
+              homePhone: phoneDigits,
+              orderFormId: currentOrderFormId,
+            }),
+          },
+          2,
+          700
+        ),
+        fetchJsonWithRetry(
+          `/api/checkout/pub/orderForm/${currentOrderFormId}/attachments/clientProfileData`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email.trim(),
+              phone: phoneDigits,
+            }),
+          },
+          2,
+          500
+        ),
+      ])
 
       if (saveBody?.ok === false) {
         throw new Error(
           saveBody?.error || saveBody?.message || 'Falha ao salvar seus dados'
         )
       }
-
-      // 3) seta no checkout
-      await fetchJsonWithRetry(
-        `/api/checkout/pub/orderForm/${orderFormId}/attachments/clientProfileData`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email.trim(),
-            phone: phoneDigits,
-          }),
-        },
-        2,
-        500
-      )
 
       window.location.assign(CHECKOUT_URL)
     } catch (err) {

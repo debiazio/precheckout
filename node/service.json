@@ -1,13 +1,8 @@
 {
   "routes": {
-    "status": {
-      "path": "/_v/status/:code",
-      "public": true
-    },
     "saveClient": {
       "path": "/_v/precheckout/client",
       "public": true
     }
   }
-
 }

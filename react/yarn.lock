@@ -3654,9 +3654,9 @@ merge-stream@^2.0.0:
   resolved "https://registry.yarnpkg.com/merge-stream/-/merge-stream-2.0.0.tgz#52823629a14dd00c9770fb6ad47dc6310f2c1f60"
   integrity sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==
 
-"mfmgroup.precheckout@https://desenv0idealine--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.1+build1771010550/public/@types/mfmgroup.precheckout":
-  version "0.0.1"
-  resolved "https://desenv0idealine--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.1+build1771010550/public/@types/mfmgroup.precheckout#e66cdbba251b73771c932704aa5cc7600969e5b4"
+"mfmgroup.precheckout@http://mfmgroup.vtexassets.com/_v/public/typings/v1/mfmgroup.precheckout@0.0.7/public/@types/mfmgroup.precheckout":
+  version "0.0.0"
+  resolved "http://mfmgroup.vtexassets.com/_v/public/typings/v1/mfmgroup.precheckout@0.0.7/public/@types/mfmgroup.precheckout#2c6ada927ae13fed4a1d16a8b93483d7e802cbeb"
 
 micromatch@^3.1.4:
   version "3.1.10"
@@ -4947,21 +4947,21 @@ verror@1.10.0:
   version "0.4.4"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.css-handles@0.4.4/public/@types/vtex.css-handles#8c45c6decf9acd2b944e07261686decff93d6422"
 
-"vtex.flex-layout@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.5/public/@types/vtex.flex-layout":
-  version "0.21.5"
-  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.5/public/@types/vtex.flex-layout#732a9584402f5a97308c079beffa41d839b4c06a"
+"vtex.flex-layout@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.6/public/@types/vtex.flex-layout":
+  version "0.21.6"
+  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.6/public/@types/vtex.flex-layout#d2908dc5f4f71459784b52097d17f3509388a872"
 
 "vtex.product-context@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.product-context@0.10.1/public/@types/vtex.product-context":
   version "0.10.1"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.product-context@0.10.1/public/@types/vtex.product-context#86ceba68085420edcf54749f07e51a257d2e5d94"
 
-"vtex.render-runtime@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.136.1/public/@types/vtex.render-runtime":
-  version "8.136.1"
-  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.136.1/public/@types/vtex.render-runtime#f163acbdb0fcc9be2065a34eb4fc797093f6d0ce"
+"vtex.render-runtime@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.136.3/public/@types/vtex.render-runtime":
+  version "8.136.3"
+  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.render-runtime@8.136.3/public/@types/vtex.render-runtime#3cc4f3fa3300fbaee4d4ef81a67ffbfd57b155c9"
 
-"vtex.search-graphql@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.search-graphql@0.69.4/public/@types/vtex.search-graphql":
-  version "0.69.4"
-  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.search-graphql@0.69.4/public/@types/vtex.search-graphql#e1a758806eab8d1cb695e5cb091e722f8a1cd48f"
+"vtex.search-graphql@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.search-graphql@0.72.0/public/@types/vtex.search-graphql":
+  version "0.72.0"
+  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.search-graphql@0.72.0/public/@types/vtex.search-graphql#d1f63055a613810019b4fe60fcc8bba296dcb934"
 
 w3c-hr-time@^1.0.1:
   version "1.0.2"
