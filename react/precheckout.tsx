@@ -1,6 +1,9 @@
 /* react/precheckout.tsx */
 /* eslint-disable react/jsx-no-bind */
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+
+// ⚠️ Atualize este valor sempre que publicar uma nova versão (deve bater com manifest.json)
+const APP_VERSION = '0.0.10'
 
 const CHECKOUT_URL = '/checkout/#/cart'
 
@@ -220,6 +223,8 @@ export default function PreCheckout() {
   const [checkingSession, setCheckingSession] = useState(true)
   const [orderFormId, setOrderFormId] = useState<string | null>(null)
 
+  const mountedRef = useRef(true)
+
   const phoneDigits = useMemo(() => onlyDigits(phone), [phone])
 
   const emailOk = useMemo(() => isValidEmail(email), [email])
@@ -227,9 +232,11 @@ export default function PreCheckout() {
 
   const isValid = useMemo(() => emailOk && phoneOk, [emailOk, phoneOk])
 
-
   useEffect(() => {
-    let active = true
+    mountedRef.current = true
+
+      // eslint-disable-next-line no-console
+  console.log(`[precheckout] versão em execução: ${APP_VERSION}`)
 
     ;(async () => {
       try {
@@ -247,18 +254,18 @@ export default function PreCheckout() {
           return
         }
 
-        if (active && orderForm?.orderFormId) {
+        if (mountedRef.current && orderForm?.orderFormId) {
           setOrderFormId(orderForm.orderFormId)
         }
       } catch {
         // se falhar, não bloqueia a página
       } finally {
-        if (active) setCheckingSession(false)
+        if (mountedRef.current) setCheckingSession(false)
       }
     })()
 
     return () => {
-      active = false
+      mountedRef.current = false
     }
   }, [])
 
@@ -296,42 +303,42 @@ export default function PreCheckout() {
         }
       }
 
-      // 2) salva no Master Data e no checkout em paralelo
-      const [saveBody] = await Promise.all([
-        fetchJsonWithRetry(
-          '/_v/precheckout/client',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: email.trim(),
-              homePhone: phoneDigits,
-              orderFormId: currentOrderFormId,
-            }),
-          },
-          2,
-          700
-        ),
-        fetchJsonWithRetry(
-          `/api/checkout/pub/orderForm/${currentOrderFormId}/attachments/clientProfileData`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: email.trim(),
-              phone: phoneDigits,
-            }),
-          },
-          2,
-          500
-        ),
-      ])
+      // 2) salva no Master Data (sequencial, para não sobrecarregar o node service)
+      const saveBody = await fetchJsonWithRetry(
+        '/_v/precheckout/client',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.trim(),
+            homePhone: phoneDigits,
+            orderFormId: currentOrderFormId,
+          }),
+        },
+        2,
+        700
+      )
 
       if (saveBody?.ok === false) {
         throw new Error(
           saveBody?.error || saveBody?.message || 'Falha ao salvar seus dados'
         )
       }
+
+      // 3) atualiza o clientProfileData do checkout
+      await fetchJsonWithRetry(
+        `/api/checkout/pub/orderForm/${currentOrderFormId}/attachments/clientProfileData`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.trim(),
+            phone: phoneDigits,
+          }),
+        },
+        2,
+        500
+      )
 
       window.location.assign(CHECKOUT_URL)
     } catch (err) {
@@ -340,9 +347,9 @@ export default function PreCheckout() {
           ? err.message
           : 'Erro inesperado ao continuar para o checkout'
 
-      setError(message)
+      if (mountedRef.current) setError(message)
     } finally {
-      setLoading(false)
+      if (mountedRef.current) setLoading(false)
     }
   }
 
