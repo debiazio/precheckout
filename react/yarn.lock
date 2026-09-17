@@ -3851,9 +3851,9 @@ merge-stream@^2.0.0:
   resolved "https://registry.yarnpkg.com/merge-stream/-/merge-stream-2.0.0.tgz#52823629a14dd00c9770fb6ad47dc6310f2c1f60"
   integrity sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==
 
-"mfmgroup.precheckout@https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.10+build1789644590/public/@types/mfmgroup.precheckout":
-  version "0.0.0"
-  resolved "https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.10+build1789644590/public/@types/mfmgroup.precheckout#59c09343fa67667828b900a1fb231fa7c3b4cc0d"
+"mfmgroup.precheckout@https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.11+build1789655106/public/@types/mfmgroup.precheckout":
+  version "0.0.11"
+  resolved "https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.11+build1789655106/public/@types/mfmgroup.precheckout#7ef7ddda3378928cccdb513886e62593e2527ffe"
 
 micromatch@^3.1.4:
   version "3.1.10"
@@ -5157,6 +5157,10 @@ verror@1.10.0:
 "vtex.flex-layout@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.6/public/@types/vtex.flex-layout":
   version "0.21.6"
   resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.6/public/@types/vtex.flex-layout#d2908dc5f4f71459784b52097d17f3509388a872"
+
+"vtex.order-manager@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.order-manager@0.12.0/public/@types/vtex.order-manager":
+  version "0.12.0"
+  resolved "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.order-manager@0.12.0/public/@types/vtex.order-manager#2cf6a9d2a31bc503b783c257695b0d17c09b5696"
 
 "vtex.product-context@http://vtex.vtexassets.com/_v/public/typings/v1/vtex.product-context@0.10.1/public/@types/vtex.product-context":
   version "0.10.1"

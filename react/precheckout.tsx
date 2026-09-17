@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 // ⚠️ Atualize este valor sempre que publicar uma nova versão (deve bater com manifest.json)
-const APP_VERSION = '0.0.12'
+const APP_VERSION = '0.0.12*'
 
 const CHECKOUT_URL = '/checkout/#/cart'
 
