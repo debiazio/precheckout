@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 // ⚠️ Atualize este valor sempre que publicar uma nova versão (deve bater com manifest.json)
-const APP_VERSION = '0.0.10'
+const APP_VERSION = '0.0.12'
 
 const CHECKOUT_URL = '/checkout/#/cart'
 
@@ -13,12 +13,13 @@ function onlyDigits(value: string) {
 }
 
 function formatBRPhone(value: string) {
-  const d = onlyDigits(value).slice(0, 11) // DDD + 9 dígitos
+  const d = onlyDigits(value).slice(0, 11)
   const len = d.length
 
   if (len === 0) return ''
   if (len <= 2) return `(${d}`
   if (len <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`
 }
 
@@ -35,40 +36,74 @@ function isValidBRPhone(value: string) {
 // ===== Helpers email =====
 function isValidEmail(value: string) {
   const e = (value || '').trim()
+
   return e.length >= 5 && e.includes('@') && e.includes('.') && !e.includes(' ')
+}
+
+// ===== Helper valor monetário =====
+function formatCurrencyFromCents(cents: number) {
+  const value = cents / 100
+
+  return value.toFixed(2).replace('.', ',')
+}
+
+// ===== Helper para montar o resumo do carrinho por produto =====
+function buildCartSummary(items: any[]) {
+  if (!items || items.length === 0) return ''
+
+  return items
+    .map((item: any, index: number) => {
+      const name = item.name ?? 'Produto'
+      // sellingPrice/price vêm em centavos e já são por unidade
+      const unitPriceCents = item.sellingPrice ?? item.price ?? 0
+      const totalItemCents = unitPriceCents * (item.quantity ?? 1)
+      const totalItemValue = formatCurrencyFromCents(totalItemCents)
+
+      return `${index + 1}) ${name} - ${totalItemValue} reais`
+    })
+    .join('  •  ')
 }
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+type FetchRetryOptions = {
+  retries?: number
+  delayMs?: number
+}
+
 async function fetchJsonWithRetry(
   input: RequestInfo,
   init?: RequestInit,
-  retries = 2,
-  delayMs = 500
+  options?: FetchRetryOptions
 ) {
+  const retries = options?.retries ?? 2
+  const delayMs = options?.delayMs ?? 500
+
   let lastError: Error | null = null
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
+      // eslint-disable-next-line no-await-in-loop
       const resp = await fetch(input, init)
 
       let body: any = null
-      const contentType = resp.headers.get('content-type') || ''
+      const contentType = resp.headers.get('content-type') ?? ''
 
       if (contentType.includes('application/json')) {
+        // eslint-disable-next-line no-await-in-loop
         body = await resp.json().catch(() => null)
       } else {
+        // eslint-disable-next-line no-await-in-loop
         const text = await resp.text().catch(() => '')
+
         body = text ? { message: text } : null
       }
 
       if (!resp.ok) {
         const message =
-          body?.error ||
-          body?.message ||
-          `Erro na requisição (${resp.status})`
+          body?.error ?? body?.message ?? `Erro na requisição (${resp.status})`
 
         throw new Error(message)
       }
@@ -78,6 +113,7 @@ async function fetchJsonWithRetry(
       lastError = err instanceof Error ? err : new Error('Erro inesperado')
 
       if (attempt < retries) {
+        // eslint-disable-next-line no-await-in-loop
         await sleep(delayMs * (attempt + 1))
         continue
       }
@@ -86,7 +122,7 @@ async function fetchJsonWithRetry(
     }
   }
 
-  throw lastError || new Error('Erro inesperado')
+  throw lastError ?? new Error('Erro inesperado')
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -221,7 +257,6 @@ export default function PreCheckout() {
   const [emailTouched, setEmailTouched] = useState(false)
   const [phoneTouched, setPhoneTouched] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
-  const [orderFormId, setOrderFormId] = useState<string | null>(null)
 
   const mountedRef = useRef(true)
 
@@ -235,27 +270,22 @@ export default function PreCheckout() {
   useEffect(() => {
     mountedRef.current = true
 
-      // eslint-disable-next-line no-console
-  console.log(`[precheckout] versão em execução: ${APP_VERSION}`)
-
+    // eslint-disable-next-line no-console
+    console.log(`[precheckout] versão em execução: ${APP_VERSION}`)
     ;(async () => {
       try {
         const orderForm = await fetchJsonWithRetry(
           '/api/checkout/pub/orderForm',
           { method: 'GET' },
-          1,
-          300
+          { retries: 1, delayMs: 300 }
         )
 
         const existingEmail = orderForm?.clientProfileData?.email
 
         if (existingEmail) {
           window.location.assign(CHECKOUT_URL)
-          return
-        }
 
-        if (mountedRef.current && orderForm?.orderFormId) {
-          setOrderFormId(orderForm.orderFormId)
+          return
         }
       } catch {
         // se falhar, não bloqueia a página
@@ -285,45 +315,39 @@ export default function PreCheckout() {
     setError(null)
 
     try {
-      // 1) reaproveita o orderFormId já buscado no useEffect; só busca de novo se necessário
-      let currentOrderFormId = orderFormId
-
-      if (!currentOrderFormId) {
-        const orderForm = await fetchJsonWithRetry(
-          '/api/checkout/pub/orderForm',
-          { method: 'GET' },
-          2,
-          400
-        )
-
-        currentOrderFormId = orderForm?.orderFormId
-
-        if (!currentOrderFormId) {
-          throw new Error('Não foi possível identificar o carrinho')
-        }
-      }
-
-      // 2) salva no Master Data (sequencial, para não sobrecarregar o node service)
-      const saveBody = await fetchJsonWithRetry(
-        '/_v/precheckout/client',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email.trim(),
-            homePhone: phoneDigits,
-            orderFormId: currentOrderFormId,
-          }),
-        },
-        2,
-        700
+      // 1) busca o orderForm completo para obter id e itens
+      const orderForm = await fetchJsonWithRetry(
+        '/api/checkout/pub/orderForm',
+        { method: 'GET' },
+        { retries: 2, delayMs: 400 }
       )
 
-      if (saveBody?.ok === false) {
-        throw new Error(
-          saveBody?.error || saveBody?.message || 'Falha ao salvar seus dados'
-        )
+      const currentOrderFormId = orderForm?.orderFormId
+
+      if (!currentOrderFormId) {
+        throw new Error('Não foi possível identificar o carrinho')
       }
+
+      // monta o resumo por produto: "1) Produto X - 1200,00 reais"
+      const cartSummary = buildCartSummary(orderForm?.items ?? [])
+
+      // 2) salva direto na Master Data (sem backend Node)
+      await fetchJsonWithRetry(
+        '/api/dataentities/CA/documents',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/vnd.vtex.ds.v10+json',
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            telefone: phoneDigits,
+            cart: cartSummary,
+          }),
+        },
+        { retries: 2, delayMs: 700 }
+      )
 
       // 3) atualiza o clientProfileData do checkout
       await fetchJsonWithRetry(
@@ -336,8 +360,7 @@ export default function PreCheckout() {
             phone: phoneDigits,
           }),
         },
-        2,
-        500
+        { retries: 2, delayMs: 500 }
       )
 
       window.location.assign(CHECKOUT_URL)
@@ -422,13 +445,16 @@ export default function PreCheckout() {
                 <span style={styles.check}>✓</span> Identificar seu perfil
               </li>
               <li style={styles.li}>
-                <span style={styles.check}>✓</span> Notificar sobre o andamento do seu pedido
+                <span style={styles.check}>✓</span> Notificar sobre o andamento
+                do seu pedido
               </li>
               <li style={styles.li}>
-                <span style={styles.check}>✓</span> Gerenciar seu histórico de compras
+                <span style={styles.check}>✓</span> Gerenciar seu histórico de
+                compras
               </li>
               <li style={styles.li}>
-                <span style={styles.check}>✓</span> Acelerar o preenchimento de suas informações
+                <span style={styles.check}>✓</span> Acelerar o preenchimento de
+                suas informações
               </li>
             </ul>
           </div>

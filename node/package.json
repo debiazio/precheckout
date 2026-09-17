@@ -11,7 +11,7 @@
     "@vtex/api": "6.51.3",
     "@vtex/test-tools": "^1.0.0",
     "@vtex/tsconfig": "^0.5.6",
-    "mfmgroup.precheckout": "http://mfmgroup.vtexassets.com/_v/public/typings/v1/mfmgroup.precheckout@0.0.7/public/@types/mfmgroup.precheckout",
+    "mfmgroup.precheckout": "https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.10+build1789644590/public/@types/mfmgroup.precheckout",
     "typescript": "3.9.7",
     "vtex.css-handles": "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.css-handles@0.4.4/public/@types/vtex.css-handles",
     "vtex.flex-layout": "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.6/public/@types/vtex.flex-layout",

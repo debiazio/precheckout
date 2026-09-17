@@ -4,7 +4,7 @@
     "noEmitOnError": false,
     "lib": ["dom"],
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "target": "es2017"
   },
   "include": [

@@ -5131,9 +5131,9 @@ methods@^1.0.1:
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==
 
-"mfmgroup.precheckout@http://mfmgroup.vtexassets.com/_v/public/typings/v1/mfmgroup.precheckout@0.0.7/public/@types/mfmgroup.precheckout":
+"mfmgroup.precheckout@https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.10+build1789644590/public/@types/mfmgroup.precheckout":
   version "0.0.0"
-  resolved "http://mfmgroup.vtexassets.com/_v/public/typings/v1/mfmgroup.precheckout@0.0.7/public/@types/mfmgroup.precheckout#2c6ada927ae13fed4a1d16a8b93483d7e802cbeb"
+  resolved "https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.10+build1789644590/public/@types/mfmgroup.precheckout#59c09343fa67667828b900a1fb231fa7c3b4cc0d"
 
 micromatch@^3.1.10, micromatch@^3.1.4:
   version "3.1.10"
@@ -6378,7 +6378,7 @@ static-extend@^0.1.1:
     define-property "^0.2.5"
     object-copy "^0.1.0"
 
-"stats-lite@github:vtex/node-stats-lite#dist":
+stats-lite@vtex/node-stats-lite#dist:
   version "2.2.1"
   resolved "https://codeload.github.com/vtex/node-stats-lite/tar.gz/a0b5ee91861f31b6ec845146b4906faf5172c430"
   dependencies:

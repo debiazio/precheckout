@@ -1,7 +1,12 @@
 {
+  "memory": 128,
+  "ttl": 10,
+  "timeout": 5,
+  "minReplicas": 2,
+  "maxReplicas": 4,
   "routes": {
-    "saveClient": {
-      "path": "/_v/precheckout/client",
+    "savePrecheckout": {
+      "path": "/_v/precheckout/save",
       "public": true
     }
   }

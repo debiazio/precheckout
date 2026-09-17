@@ -19,7 +19,7 @@
     "@vtex/tsconfig": "^0.4.4",
     "apollo-cache-inmemory": "^1.6.5",
     "graphql": "^14.6.0",
-    "mfmgroup.precheckout": "http://mfmgroup.vtexassets.com/_v/public/typings/v1/mfmgroup.precheckout@0.0.7/public/@types/mfmgroup.precheckout",
+    "mfmgroup.precheckout": "https://idealinedev--mfmgroup.myvtex.com/_v/private/typings/linked/v1/mfmgroup.precheckout@0.0.10+build1789644590/public/@types/mfmgroup.precheckout",
     "typescript": "3.9.7",
     "vtex.css-handles": "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.css-handles@0.4.4/public/@types/vtex.css-handles",
     "vtex.flex-layout": "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.flex-layout@0.21.6/public/@types/vtex.flex-layout",
@@ -28,6 +28,12 @@
     "vtex.search-graphql": "http://vtex.vtexassets.com/_v/public/typings/v1/vtex.search-graphql@0.72.0/public/@types/vtex.search-graphql"
   },
   "resolutions": {
-    "@types/jest": "26.0.15"
+    "@types/testing-library__dom": "6.12.1",
+    "@types/express": "4.16.0",
+    "@types/express-serve-static-core": "4.16.0",
+    "@types/koa": "2.13.6",
+    "@types/react-dom": "16.9.19",
+    "@types/babel__traverse": "7.18.2",
+    "axios": "0.21.4"
   }
 }
