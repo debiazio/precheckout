@@ -1,7 +1,7 @@
 {
   "vendor": "mfmgroup",
   "name": "precheckout",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "title": "precheckout",
   "description": "App para fazer uma tela de cadastro antes do carrinho",
   "builders": {
